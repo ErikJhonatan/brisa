@@ -30,3 +30,4 @@ jobs:
           npm run test:features
           npm run test:voices
           npm run test:offline
+          node scripts/check-haptics.mjs

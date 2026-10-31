@@ -104,6 +104,7 @@ export default function App() {
   const [noHolds, setNoHolds] = useState(false);
   const [preview, setPreview] = useState(false);
   const [audioError, setAudioError] = useState("");
+  const [hapticStatus, setHapticStatus] = useState("");
   const [narrating, setNarrating] = useState(false);
   const [introPaused, setIntroPaused] = useState(false);
   const [scriptTexts, setScriptTexts] = useState<Record<string, string>>({});
@@ -339,7 +340,6 @@ export default function App() {
 
   useEffect(() => {
     if (!running || complete || page !== "session") {
-      vibrate(0);
       return;
     }
     if (haptics) vibrate(phase.haptic);
@@ -551,8 +551,29 @@ export default function App() {
   const plan = ["sigh", "mindful", "body", "slow", "muscle", "kind", "ground"];
   function setVibration(value: boolean) {
     setHaptics(value);
-    if (value) vibrate([60, 80, 60]);
+    if (value) testVibration();
     else vibrate(0);
+  }
+  function testVibration() {
+    if (!hasHaptics) {
+      setHapticStatus("Este navegador no ofrece vibración. Prueba Chrome en Android; Safari de iPhone no la admite.");
+      return;
+    }
+    const accepted = vibrate([250, 150, 250]);
+    setHapticStatus(accepted
+      ? "Prueba enviada: dos pulsos. ¿Los sentiste? El navegador no puede confirmar si el motor vibró."
+      : "El navegador rechazó la vibración. Abre Brisa directamente en Chrome y vuelve a pulsar Probar vibración.");
+  }
+  function vibrationHelp() {
+    return <div className="sound-details">
+      <button className="secondary-action" onClick={testVibration}>Probar vibración</button>
+      {hapticStatus && <p className="small-copy" role="status">{hapticStatus}</p>}
+      <details className="sound-details">
+        <summary>¿No sientes la vibración?</summary>
+        <p className="small-copy">En Android, revisa Ajustes → Sonido y vibración → Respuesta háptica o Vibrar al tocar. Los nombres varían según el celular. Para probar, desactiva No molestar y el modo silencio, y abre esta página directamente en Chrome.</p>
+        <p className="small-copy">Activa Guía con vibración antes de comenzar. Los pulsos acompañan los cambios de etapa después de la introducción de voz, con la pantalla encendida y Brisa visible. La web no puede forzar la vibración si el sistema la bloquea.</p>
+      </details>
+    </div>;
   }
   function practiceCard(practice: Practice, compact = false) {
     const Icon = icons[practice.icon];
@@ -1236,7 +1257,9 @@ export default function App() {
                       color="primary"
                     />
                   </div>
+                  {vibrationHelp()}
                   <p className="safety-note">
+                    {haptics ? "La vibración empieza al terminar la introducción de voz. " : ""}
                     Respira cómodamente. Si notas mareo o más ansiedad, detente
                     y vuelve a tu respiración natural.
                   </p>
@@ -1276,6 +1299,7 @@ export default function App() {
                       onValueChange={setVibration}
                     />
                   </div>
+                  {vibrationHelp()}
                   <div className="preference-row">
                     <div>
                       <strong>Modo oscuro</strong>
