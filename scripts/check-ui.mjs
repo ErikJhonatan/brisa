@@ -21,6 +21,16 @@ await page.getByRole('button', { name: 'Descanso', exact: true }).click();
 assert.equal(await page.locator('.practice-card').count(), 2);
 await page.getByRole('button', { name: 'Todas', exact: true }).click();
 assert.equal(await page.locator('.practice-card').count(), 9);
+for (const width of [320,390,768,1280,1972]) {
+  await page.setViewportSize({width,height:844});
+  const clipped = await page.locator('.practice-card').evaluateAll(cards=>cards.filter(card=>{
+    const box=card.getBoundingClientRect();
+    const text=card.querySelector('.practice-copy').getBoundingClientRect();
+    return text.width<100 || text.left<box.left || text.right>box.right+1;
+  }).length);
+  assert.equal(clipped,0,`Practice text clipped at ${width}px`);
+}
+await page.setViewportSize({width:390,height:844});
 await page.waitForTimeout(400);
 await page.screenshot({ path: 'test-results/practices-mobile.png', fullPage: true });
 await page.getByRole('button', { name: /Suspiro cíclico Un suspiro de calma/ }).click();
