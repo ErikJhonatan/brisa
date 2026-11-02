@@ -25,7 +25,12 @@ if (import.meta.env.PROD && "serviceWorker" in navigator) {
     }
   });
   window.addEventListener("load", () => {
-    void navigator.serviceWorker.register("/sw.js").catch(() => {
+    void navigator.serviceWorker.register("/sw.js", { updateViaCache: "none" }).then(registration => {
+      void registration.update().catch(() => {});
+      document.addEventListener("visibilitychange", () => {
+        if (!document.hidden) void registration.update().catch(() => {});
+      });
+    }).catch(() => {
       /* Online app remains usable. */
     });
   });

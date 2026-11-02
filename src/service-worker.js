@@ -7,6 +7,13 @@ self.addEventListener('fetch', event => {
   const request = event.request; const url = new URL(request.url);
   if (request.method !== 'GET' || url.origin !== self.location.origin) return;
   event.respondWith((async () => {
+    // Prefer the current release online; keep the cached shell for offline use.
+    if (request.mode === 'navigate') {
+      try {
+        const response = await fetch(request, { cache: 'no-cache' });
+        if (response.ok) return response;
+      } catch { /* Continue with the offline shell. */ }
+    }
     const cached = await caches.match(url.pathname);
     if (cached) {
       const range = request.headers.get('range');
